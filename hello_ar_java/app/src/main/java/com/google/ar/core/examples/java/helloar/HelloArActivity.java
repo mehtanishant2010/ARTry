@@ -76,7 +76,7 @@ import javax.microedition.khronos.opengles.GL10;
  * ARCore API. The application will display any detected planes and will allow the user to tap on a
  * plane to place a 3d model of the Android robot.
  */
-public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
+public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.Renderer, AdapterView.OnItemSelectedListener {
   private static final String TAG = HelloArActivity.class.getSimpleName();
 
   // Rendering. The Renderers are created here, and initialized when the GL surface is created.
@@ -84,6 +84,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
 
   private boolean installRequested;
 
+  private boolean isMenuOptionChanged = false;
   private Session session;
   private final SnackbarHelper messageSnackbarHelper = new SnackbarHelper();
   private DisplayRotationHelper displayRotationHelper;
@@ -118,6 +119,9 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     }
   }
 
+  private static final String[] paths = {"Sofa", "Coffee Table"};
+
+  private String ImagePath = "models/sofa1.obj";
   private final ArrayList<ColoredAnchor> anchors = new ArrayList<>();
 
   @Override
@@ -143,32 +147,44 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     calculateUVTransform = true;
 
     depthSettings.onCreate(this);
-    ImageButton settingsButton = findViewById(R.id.settings_button);
-    settingsButton.setOnClickListener(this::launchSettingsMenuDialog);
 
-    Spinner spinner = findViewById(R.id.menu_button);
-    ArrayList<String> arrayList = new ArrayList<>();
-    arrayList.add("Sofa");
-    arrayList.add("ANDROID");
-    arrayList.add("C Language");
-    arrayList.add("CPP Language");
-    arrayList.add("Go Language");
-    arrayList.add("AVN SYSTEMS");
-    ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, arrayList);
-    arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-    spinner.setAdapter(arrayAdapter);
-    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-      @Override
-      public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        String tutorialsName = parent.getItemAtPosition(position).toString();
-        Toast.makeText(parent.getContext(), "Selected: " + tutorialsName,          Toast.LENGTH_LONG).show();
-      }
-      @Override
-      public void onNothingSelected(AdapterView <?> parent) {
-      }
-    });
+   // ImageButton settingsButton = findViewById(R.id.settings_button);
+    //settingsButton.setOnClickListener(this::launchSettingsMenuDialog);
+
+    Spinner spinner = (Spinner)findViewById(R.id.spinner1);
+    ArrayAdapter<String>adapter = new ArrayAdapter<String>(this,
+            android.R.layout.simple_spinner_item,paths);
+
+    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+    spinner.setAdapter(adapter);
+    spinner.setOnItemSelectedListener(this);
   }
 
+  @Override
+  public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+
+    switch (position) {
+      case 0:
+        // Whatever you want to happen when the first item gets selected
+        ImagePath = "models/sofa1.obj";
+        break;
+      case 1:
+        // Whatever you want to happen when the second item gets selected
+        ImagePath = "models/CenterTable.obj";
+        break;
+      case 2:
+        // Whatever you want to happen when the thrid item gets selected
+        break;
+
+    }
+    isMenuOptionChanged = true;
+
+  }
+
+  @Override
+  public void onNothingSelected(AdapterView<?> parent) {
+
+  }
 
   @Override
   protected void onResume() {
@@ -274,6 +290,11 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
   }
 
   @Override
+  public void onPointerCaptureChanged(boolean hasCapture) {
+
+  }
+
+  @Override
   public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
@@ -285,7 +306,7 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
       planeRenderer.createOnGlThread(/*context=*/ this, "models/trigrid.png");
       pointCloudRenderer.createOnGlThread(/*context=*/ this);
 
-      virtualObject.createOnGlThread(/*context=*/ this, "models/andy.obj", "models/andy.png");
+      virtualObject.createOnGlThread(/*context=*/ this, ImagePath, "models/gray-card.jpg");
       virtualObject.setBlendMode(BlendMode.AlphaBlending);
       virtualObject.setDepthTexture(
           depthTexture.getTextureId(), depthTexture.getWidth(), depthTexture.getHeight());
@@ -313,7 +334,16 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
     // Notify ARCore session that the view size changed so that the perspective matrix and
     // the video background can be properly adjusted.
     displayRotationHelper.updateSessionIfNeeded(session);
+    if (isMenuOptionChanged)
+    {
+      try {
+        virtualObject.createOnGlThread(/*context=*/ this, ImagePath, "models/gray-card.jpg");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
 
+      isMenuOptionChanged = false;
+    }
     try {
       session.setCameraTextureName(backgroundRenderer.getTextureId());
 
@@ -460,9 +490,9 @@ public class HelloArActivity extends AppCompatActivity implements GLSurfaceView.
           // for AR_TRACKABLE_PLANE, it's green color.
           float[] objColor;
           if (trackable instanceof Point) {
-            objColor = new float[] {66.0f, 133.0f, 244.0f, 255.0f};
+            objColor = new float[] {66.0f, 133.0f, 244.0f, 0.0f};
           } else if (trackable instanceof Plane) {
-            objColor = new float[] {139.0f, 195.0f, 74.0f, 255.0f};
+            objColor = new float[] {139.0f, 195.0f, 74.0f, 0.0f};
           } else {
             objColor = DEFAULT_COLOR;
           }

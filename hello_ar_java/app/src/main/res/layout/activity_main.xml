@@ -37,11 +37,10 @@
       android:background="@android:color/transparent"/>
 
   <Spinner
-      android:id="@+id/menu_button"
-      android:layout_width="wrap_content"
+      android:id="@+id/spinner1"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_alignParentTop="true"
-      android:layout_margin="25dp"
-      android:background="@android:color/holo_red_dark" />
+      android:background="@android:drawable/btn_dropdown"
+      android:spinnerMode="dropdown"/>
 
 </RelativeLayout>
